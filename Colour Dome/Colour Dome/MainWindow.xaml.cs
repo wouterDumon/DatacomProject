@@ -23,6 +23,7 @@ namespace Colour_Dome
     public partial class MainWindow : Window
     {
         private SerialPort srp = new SerialPort();
+        // TODO: Pas panning speed aan (Byte 5)
 
         public MainWindow()
         {
@@ -228,6 +229,32 @@ namespace Colour_Dome
         private void Window_Closed(object sender, EventArgs e)
         {
             srp.Close();
+        }
+
+        private void sldZoomSnelheid_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            VeranderZoomSnelheid();
+        }
+
+        private void VeranderZoomSnelheid()
+        {
+            double zoomSnelheid = sldZoomSnelheid.Value;
+            int zoomSnelheidInt = (int)zoomSnelheid;
+            string zoomSnelheidHex =  zoomSnelheidInt.ToString("X");
+
+            byte[] arrBytes = new byte[7];
+            srp.DiscardInBuffer();
+            srp.DiscardOutBuffer();
+
+            // Verstuur commando
+            arrBytes[0] = 0xFF;
+            arrBytes[1] = 0x01;
+            arrBytes[2] = 0x00;
+            arrBytes[3] = 0x19;
+            arrBytes[4] = 0x00;
+            arrBytes[5] = 0x33;
+            arrBytes[6] = 0x00;
+            srp.Write(arrBytes, 0, 7);
         }
     }
 }
