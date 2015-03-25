@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Forms;
 
 namespace Colour_Dome
 {
@@ -62,22 +63,123 @@ namespace Colour_Dome
 
         private void btnOmhoog_Click(object sender, RoutedEventArgs e)
         {
-            
+            MoveUp();
+            Wait();
+            StopCommand();
         }
 
         private void btnRechts_Click(object sender, RoutedEventArgs e)
         {
-
+            MoveRight();
+            Wait();
+            StopCommand();
         }
 
         private void btnOmlaag_Click(object sender, RoutedEventArgs e)
         {
-
+            MoveDown();
+            Wait();
+            StopCommand();
         }
 
         private void btnLinks_Click(object sender, RoutedEventArgs e)
         {
-            srp.Write("FF0100043F00");
+            MoveLeft();
+            Wait();
+            StopCommand();
+        }
+
+        private void Wait()
+        {
+            // Wacht even zodat de camera niet direct stopt met draaien
+            System.Threading.Thread.Sleep(500);
+        }
+
+        private void MoveLeft()
+        {
+            byte[] arrBytes = new byte[7];
+            srp.DiscardInBuffer();
+            srp.DiscardOutBuffer();
+
+            // Verstuur commando
+            arrBytes[0] = 0xFF;
+            arrBytes[1] = 0x01;
+            arrBytes[2] = 0x00;
+            arrBytes[3] = 0x04;
+            arrBytes[4] = 0x20;
+            arrBytes[5] = 0x00;
+            arrBytes[6] = 0x25;
+            srp.Write(arrBytes, 0, 7);
+        }
+
+        private void MoveRight()
+        {
+            byte[] arrBytes = new byte[7];
+            srp.DiscardInBuffer();
+            srp.DiscardOutBuffer();
+
+            // Verstuur commando
+            arrBytes[0] = 0xFF;
+            arrBytes[1] = 0x01;
+            arrBytes[2] = 0x00;
+            arrBytes[3] = 0x02;
+            arrBytes[4] = 0x20;
+            arrBytes[5] = 0x00;
+            arrBytes[6] = 0x23;
+            srp.Write(arrBytes, 0, 7);
+        }
+
+        private void MoveDown()
+        {
+            byte[] arrBytes = new byte[7];
+            srp.DiscardInBuffer();
+            srp.DiscardOutBuffer();
+
+            // Verstuur commando
+            arrBytes[0] = 0xFF;
+            arrBytes[1] = 0x01;
+            arrBytes[2] = 0x00;
+            arrBytes[3] = 0x10;
+            arrBytes[4] = 0x00;
+            arrBytes[5] = 0x20;
+            arrBytes[6] = 0x31;
+            srp.Write(arrBytes, 0, 7);
+        }
+
+        private void MoveUp()
+        {
+            byte[] arrBytes = new byte[7];
+            srp.DiscardInBuffer();
+            srp.DiscardOutBuffer();
+
+            // Verstuur commando
+            arrBytes[0] = 0xFF;
+            arrBytes[1] = 0x01;
+            arrBytes[2] = 0x00;
+            arrBytes[3] = 0x08;
+            arrBytes[4] = 0x00;
+            arrBytes[5] = 0x20;
+            arrBytes[6] = 0x29;
+            srp.Write(arrBytes, 0, 7);
+        }
+
+        private void StopCommand()
+        {            
+            byte[] arrStopCommando = new byte[7];
+            arrStopCommando[0] = 0xFF;
+            arrStopCommando[1] = 0x01;
+            arrStopCommando[2] = 0x00;
+            arrStopCommando[3] = 0x00;
+            arrStopCommando[4] = 0x00;
+            arrStopCommando[5] = 0x00;
+            arrStopCommando[6] = 0x01;
+            System.Threading.Thread.Sleep(500);
+            srp.Write(arrStopCommando, 0, 7);
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            srp.Close();
         }
     }
 }
