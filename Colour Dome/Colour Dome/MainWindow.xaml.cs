@@ -89,6 +89,20 @@ namespace Colour_Dome
             StopCommand();
         }
 
+        private void btnZoomIn_Click(object sender, RoutedEventArgs e)
+        {
+            ZoomIn();
+            Wait();
+            StopCommand();
+        }
+
+        private void btnZoomUit_Click(object sender, RoutedEventArgs e)
+        {
+            ZoomOut();
+            Wait();
+            StopCommand();
+        }
+
         private void Wait()
         {
             // Wacht even zodat de camera niet direct stopt met draaien
@@ -160,6 +174,40 @@ namespace Colour_Dome
             arrBytes[4] = 0x00;
             arrBytes[5] = 0x20;
             arrBytes[6] = 0x29;
+            srp.Write(arrBytes, 0, 7);
+        }
+
+        private void ZoomIn()
+        {
+            byte[] arrBytes = new byte[7];
+            srp.DiscardInBuffer();
+            srp.DiscardOutBuffer();
+
+            // Verstuur commando
+            arrBytes[0] = 0xFF;
+            arrBytes[1] = 0x01;
+            arrBytes[2] = 0x00;
+            arrBytes[3] = 0x20;
+            arrBytes[4] = 0x00;
+            arrBytes[5] = 0x00;
+            arrBytes[6] = 0x21;
+            srp.Write(arrBytes, 0, 7);
+        }
+
+        private void ZoomOut()
+        {
+            byte[] arrBytes = new byte[7];
+            srp.DiscardInBuffer();
+            srp.DiscardOutBuffer();
+
+            // Verstuur commando
+            arrBytes[0] = 0xFF;
+            arrBytes[1] = 0x01;
+            arrBytes[2] = 0x00;
+            arrBytes[3] = 0x40;
+            arrBytes[4] = 0x00;
+            arrBytes[5] = 0x00;
+            arrBytes[6] = 0x41;
             srp.Write(arrBytes, 0, 7);
         }
 
