@@ -1,0 +1,20 @@
+﻿<Window x:Class="SmartCard.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <ListBox x:Name="lstReaders" HorizontalAlignment="Left" Height="124" Margin="10,39,0,0" VerticalAlignment="Top" Width="127" Grid.RowSpan="2"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Beschikbare smartcards:" VerticalAlignment="Top"/>
+        <Button x:Name="btnConnecteer" Content="Connecteer" HorizontalAlignment="Left" Margin="153,39,0,0" VerticalAlignment="Top" Width="106" Click="btnConnecteer_Click"/>
+        <Button x:Name="btnStuurCommando" Content="Stuur commando" HorizontalAlignment="Left" Margin="153,63,0,0" VerticalAlignment="Top" Width="106" Click="btnStuurCommando_Click"/>
+        <Button x:Name="btnStuurCommandoSchrijf" Content="Stuur schrijf commando" HorizontalAlignment="Left" Margin="153,88,0,0" VerticalAlignment="Top" Width="170" Click="btnStuurCommandoSchrijf_Click"/>
+        <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="341,39,0,0" VerticalAlignment="Top" Width="75" Click="btnStop_Click"/>
+        <Button Content="Lees" HorizontalAlignment="Left" Margin="15,9.6,0,0" Grid.Row="2" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+        <TextBlock x:Name="txbError" HorizontalAlignment="Left" Margin="10,46.6,0,0" Grid.Row="2" TextWrapping="Wrap" Text="Ingelezen info.." VerticalAlignment="Top"/>
+    </Grid>
+</Window>
