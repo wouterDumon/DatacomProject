@@ -44,22 +44,28 @@ namespace SmartCard
         {
             // Testen of connectie lukt
             returnCode = ModWinsCard.SCardEstablishContext(ModWinsCard.SCARD_SCOPE_USER, 0, 0, ref hContext);
-
+            //ZONIET THROW ERROR
+            if (returnCode != ModWinsCard.SCARD_S_SUCCESS)
+                throw new Exception(returnCode.ToString());
+            int nameSize = 0;
             // Beschikbare Readers
-            returnCode = ModWinsCard.SCardListReaders(hContext, ReaderGroupBuff, ReaderListBuff, ref Readercount);
+            returnCode = ModWinsCard.SCardListReaders(hContext, null, null, ref nameSize);
 
             //Creates the byte array to receive the name
-            byte[] nameBytes = new byte[Readercount];
+            byte[] nameBytes = new byte[nameSize];
 
             //Gets the readers name
-            returnCode = ModWinsCard.SCardListReaders(hContext, null, nameBytes, ref Readercount);
+            returnCode = ModWinsCard.SCardListReaders(hContext, null, nameBytes, ref nameSize);
 
             //Decodify the readers name
-            sCardName = System.Text.Encoding.ASCII.GetString(nameBytes, 0, Readercount).Replace("\0", "");
-
+            sCardName = System.Text.Encoding.ASCII.GetString(nameBytes, 0, nameSize).Replace("\0", "");
+            lstReaders.Items.Add(sCardName);
+         //   lstReaders.Items.Add("CCID USB Smart Card Reader");
+          //  lstReaders.Items.Add("ACS ACR122U PICC Interface 0");
+           // lstReaders.Items.Add("ACS ACR122 PICC Interface 0");
             string[] cardNames = sCardName.Split('0');
             foreach (string card in cardNames)
-            {
+           {
                 if (card == "")
                     return;
 
@@ -67,6 +73,7 @@ namespace SmartCard
                 lstReaders.Items.Add(scard);
              
             }
+          
             
         }
 
