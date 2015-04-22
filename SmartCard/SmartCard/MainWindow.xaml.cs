@@ -60,20 +60,6 @@ namespace SmartCard
             //Decodify the readers name
             sCardName = System.Text.Encoding.ASCII.GetString(nameBytes, 0, nameSize).Replace("\0", "");
             lstReaders.Items.Add(sCardName);
-         //   lstReaders.Items.Add("CCID USB Smart Card Reader");
-          //  lstReaders.Items.Add("ACS ACR122U PICC Interface 0");
-           // lstReaders.Items.Add("ACS ACR122 PICC Interface 0");
-            string[] cardNames = sCardName.Split('0');
-            foreach (string card in cardNames)
-           {
-                if (card == "")
-                    return;
-
-                string scard = card.Remove(card.Length - 1);
-                lstReaders.Items.Add(scard);
-             
-            }
-          
             
         }
 
@@ -88,9 +74,8 @@ namespace SmartCard
             returnCode = ModWinsCard.SCardConnect(hContext, cardName, ModWinsCard.SCARD_SHARE_SHARED, ModWinsCard.SCARD_PROTOCOL_T0, ref hCard, ref Protocol);
         }
 
-        private void btnStuurCommando_Click(object sender, RoutedEventArgs e)
+        private void StartTransactie()
         {
-           
             SendBuff[0] = 0xFF; // Start (Comand Class)
             SendBuff[1] = 0xA4; // Commando Instruction: Vraag card type op
             SendBuff[2] = 0x0; // 
@@ -98,6 +83,8 @@ namespace SmartCard
             SendBuff[4] = 0x01; // Lengte data -> 1 byte
             SendBuff[5] = 0x1; // I2C card
             sendLength = 6;
+
+            
 
             ioRequest.dwProtocol = Protocol;
             ioRequest.cbPciLength = 8;
@@ -108,20 +95,63 @@ namespace SmartCard
 
         private void btnStuurCommandoSchrijf_Click(object sender, RoutedEventArgs e)
         {
+            StartTransactie();
+            LeesCommando();
+            StopTransactie();
+        }
+
+        private void LeesCommando()
+        {
             // Maak SendBuffer & ReceivedBuffer leeg
             Array.Clear(SendBuff, 0, 262);
             Array.Clear(RecvBuff, 0, 262);
 
-            SendBuff[0] = 0xFF; // Start
-            SendBuff[1] = 0xD0; // Command Instruction (card type)
-            SendBuff[2] = 0x0; // Memory adres
-            SendBuff[3] = 0x0; // Memory adres
-            SendBuff[4] = 0x03;
+            SendBuff[0] = 0xFF; // Start (Comand Class)
+            SendBuff[1] = 0xB0; // Commando Instruction: Lees card
+            SendBuff[2] = 0x01;
+            SendBuff[3] = 0x08;
+            SendBuff[4] = 0xFF; // Lengte data -> 1 byte
+            sendLength = 5;
+
+            ioRequest.dwProtocol = Protocol;
+            ioRequest.cbPciLength = 8;
+
+            ReceivedLength = RecvBuff.Length;
+
+            returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
+
+            //Decodify the readers name
+            string received = System.Text.Encoding.ASCII.GetString(RecvBuff, 0, ReceivedLength).Replace("\0", "");
+            txtIngelezen.Text = received;
+
+            ModWinsCard.SCardEndTransaction(hCard, ModWinsCard.SCARD_LEAVE_CARD);
+        }
+
+        private void btnSchrijf_Click(object sender, RoutedEventArgs e)
+        {
+            StartTransactie();
+            SchrijfCommando();
+            StopTransactie();
+        }
+
+        private void SchrijfCommando()
+        {
+            // Maak SendBuffer & ReceivedBuffer leeg
+            Array.Clear(SendBuff, 0, 262);
+            Array.Clear(RecvBuff, 0, 262);
+
+            SendBuff[0] = 0xFF; // Start (Comand Class)
+            SendBuff[1] = 0xD0; // Commando Instruction: Schrijf card
+            SendBuff[2] = 0x01;
+            SendBuff[3] = 0x08;
+            SendBuff[4] = 0x03; // Lengte data -> 1 byte
             SendBuff[5] = 0x74;
-            SendBuff[6] = 0x69;
+            SendBuff[6] = 0x74;
             SendBuff[7] = 0x73;
             SendBuff[8] = 0x74;
             sendLength = 9;
+
+            ReceivedLength = RecvBuff.Length;
 
             ioRequest.dwProtocol = Protocol;
             ioRequest.cbPciLength = 8;
@@ -129,17 +159,17 @@ namespace SmartCard
             returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
         }
 
-        private void btnStop_Click(object sender, RoutedEventArgs e)
+
+        private void StopTransactie()
         {
             ModWinsCard.SCardEndTransaction(hCard, ModWinsCard.SCARD_LEAVE_CARD);
+        }
+
+        private void btnStop_Click(object sender, RoutedEventArgs e)
+        {
             ModWinsCard.SCardDisconnect(hCard, ModWinsCard.SCARD_UNPOWER_CARD);
             ModWinsCard.SCardReleaseContext(hContext);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            SendBuff[0] = 0;
-            //ModWinsCard.SCardTransmit(hCard, ioRequest, SendBuff[0])
-        }
     }
 }
