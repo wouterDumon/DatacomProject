@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -160,7 +161,8 @@ namespace SmartCard
             //StopTransactie();
 
             // SLE4442 Kaartje
-            Lees();
+            string text = Lees();
+            txtIngelezen.Text = text;
         }
 
         private void SelectCardType()
@@ -244,7 +246,7 @@ namespace SmartCard
             txbError.Text = ModWinsCard.GetScardErrMsg(returnCode);
         }
 
-        private void Lees()
+        private string Lees()
         {
             StartTransactieSLE();
 
@@ -268,9 +270,9 @@ namespace SmartCard
 
             //Decodify the readers name
             string received = encoding.GetString(RecvBuff).Substring(0, 0x20);
-            txtIngelezen.Text = received;
 
             StopTransactie();
+            return received;
         }
 
         private void btnSchrijf_Click(object sender, RoutedEventArgs e)
@@ -320,7 +322,15 @@ namespace SmartCard
         private void btnLogin_Click(object sender, RoutedEventArgs e)
         {
             PresentCodeMemoryCard();
+            SchrijfDatumEnUur();
         }
+
+        private void SchrijfDatumEnUur()
+        {
+            string huidigeTijd = DateTime.Now.ToString(@"dd/MM/yy H:mm:ss");
+            Schrijf(encoding.GetBytes(huidigeTijd));
+        }
+
         private void StopTransactie()
         {
             ModWinsCard.SCardEndTransaction(hCard, ModWinsCard.SCARD_LEAVE_CARD);
@@ -330,6 +340,35 @@ namespace SmartCard
         {
             ModWinsCard.SCardDisconnect(hCard, ModWinsCard.SCARD_UNPOWER_CARD);
             ModWinsCard.SCardReleaseContext(hContext);
+        }
+
+        private void btnSchrijfNaarSmartcard_Click(object sender, RoutedEventArgs e)
+        {
+            SchrijfNaamGebruiker();
+            //SchrijfAdresGebruiker();
+            
+        }
+
+        private void SchrijfNaamGebruiker()
+        {
+            Schrijf(encoding.GetBytes(txtNaamGebruiker.Text));
+        }
+
+
+        private void SchrijfAdresGebruiker()
+        {
+            Schrijf(encoding.GetBytes(txtAdresGebruiker.Text));
+        }
+
+        private void ToonInhoudSmartcard()
+        {
+            string text = Lees();
+            txtInhoudSmartcard.Text = text;
+        }
+
+        private void btnToonInhoud_Click(object sender, RoutedEventArgs e)
+        {
+            ToonInhoudSmartcard();
         }
 
     }
