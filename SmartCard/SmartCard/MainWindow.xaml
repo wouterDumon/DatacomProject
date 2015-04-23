@@ -8,14 +8,19 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <ListBox x:Name="lstReaders" HorizontalAlignment="Left" Height="124" Margin="10,39,0,0" VerticalAlignment="Top" Width="190" Grid.RowSpan="2"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Beschikbare smartcards:" VerticalAlignment="Top"/>
-        <Button x:Name="btnConnecteer" Content="Connecteer" HorizontalAlignment="Left" Margin="217,39,0,0" VerticalAlignment="Top" Width="106" Click="btnConnecteer_Click"/>
-        <Button x:Name="btnStuurCommandoSchrijf" Content="Lees commando" HorizontalAlignment="Left" Margin="217,9.8,0,0" VerticalAlignment="Top" Width="106" Click="btnStuurCommandoSchrijf_Click" Grid.Row="1"/>
-        <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="341,39,0,0" VerticalAlignment="Top" Width="75" Click="btnStop_Click"/>
+        <ListBox x:Name="lstReaders" SelectedIndex="0" HorizontalAlignment="Left" Height="124" Margin="10,90,0,0" VerticalAlignment="Top" Width="190" Grid.RowSpan="2"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,69,0,0" TextWrapping="Wrap" Text="Beschikbare smartcards:" VerticalAlignment="Top"/>
+        <Button x:Name="btnConnecteer" Content="Connecteer" HorizontalAlignment="Left" Margin="10,29,0,0" VerticalAlignment="Top" Width="127" Click="btnConnecteer_Click" Height="34"/>
+        <Button x:Name="btnStuurCommandoSchrijf" Content="Lees commando" HorizontalAlignment="Left" Margin="217,56.8,0,0" VerticalAlignment="Top" Width="106" Click="btnStuurCommandoSchrijf_Click" Grid.Row="1"/>
+        <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="437,44,0,0" VerticalAlignment="Top" Width="75" Click="btnStop_Click"/>
         <TextBlock x:Name="txbError" HorizontalAlignment="Left" Margin="10,46.6,0,0" Grid.Row="2" TextWrapping="Wrap" Text="Ingelezen info.." VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="217,94,0,0" Grid.RowSpan="2" TextWrapping="Wrap" Text="Commando's:" VerticalAlignment="Top" RenderTransformOrigin="0.171,-0.225"/>
-        <Button x:Name="btnSchrijf" Content="Schrijf commando" HorizontalAlignment="Left" Margin="217,77.8,0,0" Grid.Row="1" VerticalAlignment="Top" Width="106" Click="btnSchrijf_Click"/>
-        <TextBox x:Name="txtIngelezen" HorizontalAlignment="Left" Height="50" Margin="341,5.8,0,0" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="167"/>
+        <TextBlock HorizontalAlignment="Left" Margin="217,35.8,0,0" TextWrapping="Wrap" Text="Commando's:" VerticalAlignment="Top" RenderTransformOrigin="0.171,-0.225" Grid.Row="1"/>
+        <Button x:Name="btnSchrijf" Content="Schrijf commando" HorizontalAlignment="Left" Margin="217,32.6,0,0" Grid.Row="2" VerticalAlignment="Top" Width="106" Click="btnSchrijf_Click"/>
+        <TextBox x:Name="txtIngelezen" HorizontalAlignment="Left" Height="50" Margin="341,56.8,0,0" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="167"/>
+        <TextBox x:Name="txtSchrijf" HorizontalAlignment="Left" Height="50" Margin="341,32.6,0,0" Grid.Row="2" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="167"/>
+        <TextBlock HorizontalAlignment="Left" Margin="204,10,0,0" TextWrapping="Wrap" Text="Login PIN Code:" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtPinCode" HorizontalAlignment="Left" Text="FFFFFF" Height="23" Margin="295,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <Button x:Name="btnLogin" Content="Login" HorizontalAlignment="Left" Margin="437,11,0,0" VerticalAlignment="Top" Width="75" Click="btnLogin_Click"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,8,0,0" TextWrapping="Wrap" Text="Connecteer eerst! Daarna inloggen." VerticalAlignment="Top"/>
     </Grid>
 </Window>

@@ -29,6 +29,7 @@ namespace SmartCard
         byte[] RecvBuff = new byte[262];
         byte[] SendBuff = new byte[262];
         string sCardName;
+        System.Text.ASCIIEncoding encoding = new ASCIIEncoding();
 
         public MainWindow()
         {
@@ -72,9 +73,15 @@ namespace SmartCard
         {
             // Connecteer met de Reader
             returnCode = ModWinsCard.SCardConnect(hContext, cardName, ModWinsCard.SCARD_SHARE_SHARED, ModWinsCard.SCARD_PROTOCOL_T0, ref hCard, ref Protocol);
+
+            SelectCardType();
+            ReadPresentationErrorCounter();
         }
 
-        private void StartTransactie()
+        #region I2C Protocol Methodes
+
+
+        private void StartTransactieI2C()
         {
             SendBuff[0] = 0xFF; // Start (Comand Class)
             SendBuff[1] = 0xA4; // Commando Instruction: Vraag card type op
@@ -84,23 +91,13 @@ namespace SmartCard
             SendBuff[5] = 0x1; // I2C card
             sendLength = 6;
 
-            
-
             ioRequest.dwProtocol = Protocol;
             ioRequest.cbPciLength = 8;
 
             returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
             txbError.Text = ModWinsCard.GetScardErrMsg(returnCode);
         }
-
-        private void btnStuurCommandoSchrijf_Click(object sender, RoutedEventArgs e)
-        {
-            StartTransactie();
-            LeesCommando();
-            StopTransactie();
-        }
-
-        private void LeesCommando()
+        private void LeesCommandoI2C()
         {
             // Maak SendBuffer & ReceivedBuffer leeg
             Array.Clear(SendBuff, 0, 262);
@@ -127,14 +124,7 @@ namespace SmartCard
             ModWinsCard.SCardEndTransaction(hCard, ModWinsCard.SCARD_LEAVE_CARD);
         }
 
-        private void btnSchrijf_Click(object sender, RoutedEventArgs e)
-        {
-            StartTransactie();
-            SchrijfCommando();
-            StopTransactie();
-        }
-
-        private void SchrijfCommando()
+        private void SchrijfCommandoI2C()
         {
             // Maak SendBuffer & ReceivedBuffer leeg
             Array.Clear(SendBuff, 0, 262);
@@ -142,9 +132,9 @@ namespace SmartCard
 
             SendBuff[0] = 0xFF; // Start (Comand Class)
             SendBuff[1] = 0xD0; // Commando Instruction: Schrijf card
-            SendBuff[2] = 0x01;
-            SendBuff[3] = 0x08;
-            SendBuff[4] = 0x03; // Lengte data -> 1 byte
+            SendBuff[2] = 0x00;
+            SendBuff[3] = 0x00;
+            SendBuff[4] = 0x04; // Lengte data -> 1 byte
             SendBuff[5] = 0x74;
             SendBuff[6] = 0x74;
             SendBuff[7] = 0x73;
@@ -159,7 +149,178 @@ namespace SmartCard
             returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
         }
 
+        #endregion
 
+
+        private void btnStuurCommandoSchrijf_Click(object sender, RoutedEventArgs e)
+        {
+            // I2C Protocol (Kaartje zonder chip)
+            //StartTransactieI2C();
+            //LeesCommandoI2C();
+            //StopTransactie();
+
+            // SLE4442 Kaartje
+            Lees();
+        }
+
+        private void SelectCardType()
+        {
+            StartTransactieSLE();
+
+            SendBuff[0] = 0xFF; // Start (Comand Class)
+            SendBuff[1] = 0xA4; // Commando Instruction: Instruction card type
+            SendBuff[2] = 0x0; // Memory adres 
+            SendBuff[3] = 0x0; // Memory adres 
+            SendBuff[4] = 0x01; // Memory Length
+            SendBuff[5] = 0x06; // SLE4442 card
+            sendLength = 6;
+
+            ioRequest.dwProtocol = Protocol;
+            ioRequest.cbPciLength = 8;
+
+            ReceivedLength = RecvBuff.Length;
+
+            returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
+
+            StopTransactie();
+        }
+
+        private void StartTransactieSLE()
+         {
+            // Start Transactie
+             returnCode = ModWinsCard.SCardBeginTransaction(hCard);
+         }
+
+        private void ReadPresentationErrorCounter()
+        {
+            StartTransactieSLE();
+
+            // Maak SendBuffer & ReceivedBuffer leeg
+            Array.Clear(SendBuff, 0, 262);
+            Array.Clear(RecvBuff, 0, 262);
+
+            SendBuff[0] = 0xFF; // Start (Comand Class)
+            SendBuff[1] = 0xB1; // Commando Instruction: Vraag card type op
+            SendBuff[2] = 0x00; // Memory adres
+            SendBuff[3] = 0x00; // Memory adres
+            SendBuff[4] = 0x04; // Memory Length
+            sendLength = 5;
+
+            ReceivedLength = RecvBuff.Length & 0x9000;
+
+            ioRequest.dwProtocol = Protocol;
+            ioRequest.cbPciLength = 8;
+
+            returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
+            txbError.Text = ModWinsCard.GetScardErrMsg(returnCode);
+
+            StopTransactie();
+        }
+
+        private void PresentCodeMemoryCard()
+        {
+            StartTransactieSLE();
+
+            // Maak SendBuffer & ReceivedBuffer leeg
+            Array.Clear(SendBuff, 0, 262);
+            Array.Clear(RecvBuff, 0, 262);
+
+            SendBuff[0] = 0xFF; // Start (Comand Class)
+            SendBuff[1] = 0x20; // Commando Instruction: Vraag card type op
+            SendBuff[2] = 0x00; // Memory adres
+            SendBuff[3] = 0x00; // Memory adres
+            SendBuff[4] = 0x03; // Memory Length
+            SendBuff[5] = 0xFF; // PIN Code
+            SendBuff[6] = 0xFF; // PIN Code
+            SendBuff[7] = 0xFF; // PIN Code
+            sendLength = 8;
+
+            ioRequest.dwProtocol = Protocol;
+            ioRequest.cbPciLength = 8;
+
+            ReceivedLength = RecvBuff.Length;
+
+            returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
+            txbError.Text = ModWinsCard.GetScardErrMsg(returnCode);
+        }
+
+        private void Lees()
+        {
+            StartTransactieSLE();
+
+            // Maak SendBuffer & ReceivedBuffer leeg
+            Array.Clear(SendBuff, 0, 262);
+            Array.Clear(RecvBuff, 0, 262);
+
+            SendBuff[0] = 0xFF; // Start (Comand Class)
+            SendBuff[1] = 0xB0; // Commando Instruction: Lees card
+            SendBuff[2] = 0x00; // Vanaf byte 32 beginnen lezen (Alles daarvoor is Chip Coding, Application ID)
+            SendBuff[3] = 0x33; 
+            SendBuff[4] = 0x20; // Lengte data -> 1 byte
+            sendLength = 5;
+
+            ioRequest.dwProtocol = Protocol;
+            ioRequest.cbPciLength = 8;
+
+            ReceivedLength = RecvBuff.Length;
+
+            returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
+
+            //Decodify the readers name
+            string received = encoding.GetString(RecvBuff).Substring(0, 0x20);
+            txtIngelezen.Text = received;
+
+            StopTransactie();
+        }
+
+        private void btnSchrijf_Click(object sender, RoutedEventArgs e)
+        {
+            // I2C Protocol (Kaartje zonder chip)
+            //StartTransactieI2C();
+            //SchrijfCommandoI2C();
+            //StopTransactie();
+
+            // SLE4442 Kaartje
+            Schrijf(encoding.GetBytes(txtSchrijf.Text));
+        }
+
+        private void Schrijf(byte[] karakters)
+        {
+            StartTransactieSLE();
+
+            byte length = Convert.ToByte(karakters.Length);
+
+            // Maak SendBuffer & ReceivedBuffer leeg
+            Array.Clear(SendBuff, 0, 262);
+            Array.Clear(RecvBuff, 0, 262);
+
+            SendBuff[0] = 0xFF;  // Start (Comand Class)
+            SendBuff[1] = 0xD0; // Commando Instruction: Schrijf op card
+            SendBuff[2] = 0x00; // Memory adres
+            SendBuff[3] = 0x33; // Memory adres
+            SendBuff[4] = length; // Memory Length
+
+            for (int i = 5; i < length + 5; i++)
+            {
+                SendBuff[i] = karakters[i - 5];
+            }
+
+            sendLength = length + 5;
+
+            ioRequest.dwProtocol = Protocol;
+            ioRequest.cbPciLength = 8;
+
+            ReceivedLength = RecvBuff.Length;
+
+            returnCode = ModWinsCard.SCardTransmit(hCard, ref ioRequest, ref SendBuff[0], sendLength, ref ioRequest, ref RecvBuff[0], ref ReceivedLength);
+
+            StopTransactie();
+        }
+
+        private void btnLogin_Click(object sender, RoutedEventArgs e)
+        {
+            PresentCodeMemoryCard();
+        }
         private void StopTransactie()
         {
             ModWinsCard.SCardEndTransaction(hCard, ModWinsCard.SCARD_LEAVE_CARD);
