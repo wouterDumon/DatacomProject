@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -31,6 +33,7 @@ namespace SmartCard
         byte[] SendBuff = new byte[262];
         string sCardName;
         System.Text.ASCIIEncoding encoding = new ASCIIEncoding();
+        private static Timer aTimer;
 
         public MainWindow()
         {
@@ -161,7 +164,7 @@ namespace SmartCard
             //StopTransactie();
 
             // SLE4442 Kaartje
-            string text = Lees();
+            string text = Lees(0x33) + " / "+ Lees(0x53); 
             txtIngelezen.Text = text;
         }
 
@@ -246,7 +249,7 @@ namespace SmartCard
             txbError.Text = ModWinsCard.GetScardErrMsg(returnCode);
         }
 
-        private string Lees()
+        private string Lees(byte memoryAdres)
         {
             StartTransactieSLE();
 
@@ -257,8 +260,8 @@ namespace SmartCard
             SendBuff[0] = 0xFF; // Start (Comand Class)
             SendBuff[1] = 0xB0; // Commando Instruction: Lees card
             SendBuff[2] = 0x00; // Vanaf byte 32 beginnen lezen (Alles daarvoor is Chip Coding, Application ID)
-            SendBuff[3] = 0x33; 
-            SendBuff[4] = 0x20; // Lengte data -> 1 byte
+            SendBuff[3] = memoryAdres; 
+            SendBuff[4] = Convert.ToByte(20); // Lengte data
             sendLength = 5;
 
             ioRequest.dwProtocol = Protocol;
@@ -283,10 +286,10 @@ namespace SmartCard
             //StopTransactie();
 
             // SLE4442 Kaartje
-            Schrijf(encoding.GetBytes(txtSchrijf.Text));
+            Schrijf(encoding.GetBytes(txtSchrijf.Text),0x53);
         }
 
-        private void Schrijf(byte[] karakters)
+        private void Schrijf(byte[] karakters, byte msb)
         {
             StartTransactieSLE();
 
@@ -299,7 +302,7 @@ namespace SmartCard
             SendBuff[0] = 0xFF;  // Start (Comand Class)
             SendBuff[1] = 0xD0; // Commando Instruction: Schrijf op card
             SendBuff[2] = 0x00; // Memory adres
-            SendBuff[3] = 0x33; // Memory adres
+            SendBuff[3] = msb; // Memory adres
             SendBuff[4] = length; // Memory Length
 
             for (int i = 5; i < length + 5; i++)
@@ -323,12 +326,45 @@ namespace SmartCard
         {
             PresentCodeMemoryCard();
             SchrijfDatumEnUur();
+            StartBackgroundWorker();
         }
+
+        private void StartBackgroundWorker()
+        {
+            BackgroundWorker backgroundWorker = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            backgroundWorker.DoWork += backgroundWorker_DoWork;
+            backgroundWorker.ProgressChanged += backgroundWorker_ProgressChanged;
+            backgroundWorker.RunWorkerAsync();
+        }
+
+        void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = (BackgroundWorker)sender;
+            aTimer = new System.Timers.Timer(3000);
+            aTimer.Elapsed += aTimer_Elapsed;
+            aTimer.Enabled = true;
+        }
+
+        void aTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // Zorgt ervoor dat de kaart niet gewist wordt -> Om de 3 seconden lezen
+            string text = Lees(0x33);
+        }
+
+        void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            
+        }
+
 
         private void SchrijfDatumEnUur()
         {
             string huidigeTijd = DateTime.Now.ToString(@"dd/MM/yy H:mm:ss");
-            Schrijf(encoding.GetBytes(huidigeTijd));
+            Schrijf(encoding.GetBytes(huidigeTijd),0x33);
         }
 
         private void StopTransactie()
@@ -344,25 +380,19 @@ namespace SmartCard
 
         private void btnSchrijfNaarSmartcard_Click(object sender, RoutedEventArgs e)
         {
-            SchrijfNaamGebruiker();
-            //SchrijfAdresGebruiker();
+            SchrijfNaamEnAdresGebruiker();
+        }
+
+        private void SchrijfNaamEnAdresGebruiker()
+        {
             
-        }
-
-        private void SchrijfNaamGebruiker()
-        {
-            Schrijf(encoding.GetBytes(txtNaamGebruiker.Text));
-        }
-
-
-        private void SchrijfAdresGebruiker()
-        {
-            Schrijf(encoding.GetBytes(txtAdresGebruiker.Text));
-        }
+            //Schrijf(encoding.GetBytes(text + "/" + txtNaamGebruiker.Text + "/" + txtAdresGebruiker.Text));
+            Schrijf(encoding.GetBytes(txtNaamGebruiker.Text + " / " + txtAdresGebruiker.Text),0x53);
+        } 
 
         private void ToonInhoudSmartcard()
         {
-            string text = Lees();
+            string text = Lees(0x33) + " / " + Lees(0x53);
             txtInhoudSmartcard.Text = text;
         }
 
@@ -370,6 +400,6 @@ namespace SmartCard
         {
             ToonInhoudSmartcard();
         }
-
     }
+    
 }
